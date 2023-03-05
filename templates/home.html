@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <title>Home</title>
+</head>
+<body>
+    <div class="content">
+        <h2>Hello, {{name}}</h2>
+        <h2>Current song: {{current['name']}}</h2>
+        <h1>Add a song:</h1>
+        <form action="/home" method="POST">
+            <div class="txt_field">
+                <input type="text" name="song" required>
+               <span></span>
+                <label>Song Name</label>
+            </div>
+            <input type="submit" value="Submit">
+        </form>
+        <h1>Number of skips:</h1>
+        <h2
+        <form action="/vote" method="POST">
+            <button type="submit">Skip Song</button>
+        </form>
+
+    
+</body>
+</html>
