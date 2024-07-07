@@ -1,16 +1,16 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-
+from flask import session as login_session
 #initial app setup
 
 #this is stuff that i got from spotify. kinda like how you open an app in firebase, you can open an app in spotify and this is the config
-client_id ="ba4d34b7c5ee41079ca1f4d291009ab9"
-client_secret ="c7c8c045fa6640d5a184c3902d6767ea"
+client_id ="2f3ddb10f2a048e9a4a1cb89ff64697a"
+client_secret ="48962f9a9d254800a949de8d2180734b"
 
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id,
                                                     client_secret=client_secret,
-                                                    redirect_uri='http://example.com', #this is an empty url. idk why you need it but it needs to exist to 'redirect' the page to initiate it (?)
-                                                    scope="user-modify-playback-state user-read-playback-state")) #these are the scopes needed. basically what things we're allowed to do. in this case, modify the playback state (add to queue, skip song) and read playback state (find current song info)
+                                                    redirect_uri='http://example.com', 
+                                                    scope="user-modify-playback-state user-read-currently-playing")) #these are the scopes needed. basically what things we're allowed to do. in this case, modify the playback state (add to queue, skip song) and read playback state (find current song info)
 
 #class setup
 
@@ -23,6 +23,8 @@ def addStudentToBlacklist(student_name):
 
 def findCurrentSongInfo():
     current = spotify.currently_playing() #if you want you can print this out. it's a massive dictionary of literally everything it's so hard to read
+    if current==None:
+        return {"name": "Nothing"}
     current_song = current['item']['name']
     num_of_artists = len(current['item']['artists'])
     print(num_of_artists)
@@ -33,10 +35,10 @@ def findCurrentSongInfo():
     print(artists)
     return(song_info)
 
-def addNewSongToQueue(uri, student_name):
-    if(student_name not in blacklisted_students):
+def addNewSongToQueue(uri):
+    if(login_session['name'] not in blacklisted_students):
         added = spotify.add_to_queue(uri) #a uri is basically spotify's link to a song. you can find the url by pressing ctrl while clicking on the share button on a spotify track
-        return added
+        return f"added {added}"
     else:
         return "You've been blacklisted :(\nNext time don't be annoying"
 
