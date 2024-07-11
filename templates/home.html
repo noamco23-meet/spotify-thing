@@ -4,29 +4,32 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="../static/css/style.css">
     <title>Home</title>
+    <meta http-equiv="refresh" content="3">
 </head>
 <body>
-    <div class="content">
-        <h2>Hello, {{name}}</h2>
-        {% if song ['artists']|length == 0 %}
-        <h2>No songs are currently playing</h2>
-        {%endif%}
-        <h2>Current song: {{ song['name'] }}, {{ song['artists']}}</h2>
-        <h1>Add a song:</h1>
-        <form action="/home" method="POST">
-            <div class="txt_field">
-                <input type="text" name="song" required>
-               <span></span>
-                <label>Song Name</label>
-            </div>
+    <h2>Hello, {{name}}</h2>
+    <h2>Current song: {{song}}, {{artists}}</h2>
+    <h1>Add a song:</h1>
+    <form action="/home" method="POST">
+        <div class="txt_field">
+            <input type="text" name="song" required>
+            <span></span>
+            <label>Song Name</label>
+        </div>
+        {% if isFull == True %}
+            <input type="submit" value="Submit" disabled="disabled">
+        {% else %}
             <input type="submit" value="Submit">
-        </form>
-        <h1>Number of skips:</h1>
-        <h2>{{skips}}</h2>
-        <form action="/vote" method="POST">
-            <button type="submit">Skip Song</button>
-        </form>
-
-    
+        {% endif %}
+    </form>
+    <h1>Number of skips:</h1>    
+    {#<h2>{{song['votes']}}</h2>#}
+    <form action="/vote" method="POST">
+        {% if voted == False %}
+        <button type="submit">Skip Song</button>
+        {% else %}
+        <button type="submit">Voted!</button>
+        {% endif %}
+    </form>
 </body>
 </html>
