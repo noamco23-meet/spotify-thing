@@ -8,7 +8,7 @@
 </head>
 <body>
     <h2>Hello, {{name}}</h2>
-    <h2>Current song: {{song}}, {{artists}}</h2>
+    <h2>Current song: {{song['name']}}, {{song['album']['artists'][0]['name']}}</h2>
     <h1>Add a song:</h1>
     <form action="/home" method="POST">
         <div class="txt_field">
@@ -23,7 +23,7 @@
         {% endif %}
     </form>
     <h1>Number of skips:</h1>    
-    {#<h2>{{song['votes']}}</h2>#}
+    <h2>{{votes}}/{{totalSkips}}</h2>
     <form action="/vote" method="POST">
         {% if voted == False %}
         <button type="submit">Skip Song</button>

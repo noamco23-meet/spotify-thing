@@ -56,7 +56,7 @@ def updateCurrent():
       return
   current_uri = current['item']['uri']
   db_info = json.loads(json.dumps(db.child("current").get().val()))
-  print(db_info)
+  print(f"db_info: {str(db_info)}")
   if db_info == None:
      print("None")
      db.child("current").child("spotify:track:1Pai6r7aZUkrP57WoGNVtp").set({"timestamp": {".sv": "timestamp"}, "votes": 0})

@@ -12,6 +12,8 @@ CLIENT_SECRET ="48962f9a9d254800a949de8d2180734b"
 auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
+SONG_SKIP_REQUIREMENT=1
+
 
 firebaseConfig = {
   "apiKey": "AIzaSyCRj8D8wEQ7wf4u2QHMxtQ12cJZSBx0yZI",
@@ -34,32 +36,48 @@ db = firebase.database()
 
 def fetchCurrent():
     current = db.child("current").get().val()
-    if current == None:
-        print("EMPTYYYYYYYYYYYYY")
-        current = {"name": 0, "votes":0}
+    # print(f"current {current}")
     db_info = json.loads(json.dumps(current))
-    uri = list(db_info.keys())[0]
+    # print(f"db info {db_info}")
+    if db_info == None:
+        print("EMPTYYYYYYYYYYYYY")
+        uri = {"name": 0, "votes":0}
+        return uri
+    uri = next(iter(db_info))
     return uri
-
-def fetchFirstQueue():
-    first = db.child("queue").order_by_child("timestamp").limit_to_first(1).get().val()
-    print("first" + str(first))
+  
 
 def toggleVote():
-    print("yas")
+    print("toggling vote")
+
     current = json.loads(json.dumps(db.child("current").get().val()))
-    print(current[fetchCurrent()])
+    current_uri = fetchCurrent()
+    # print(f"uri of current song: {current_uri}")
+    # print(f"content of current: {current[current_uri]}")
+    votes = current[current_uri]['votes']
+    print(votes)
 
-    # if login_session['voted'] == False:
-    #     db.child("current").update({"votes": votes+1})
-    # else:
-    #     db.child("current").update({"votes":votes-1})
+    if login_session['voted'] == False:
+        votes += 1
+    else:
+        votes -= 1
+    
+    db.child("current").child(current_uri).update({"votes": votes})
+    login_session['voted'] = not login_session['voted']
+    return votes
+    
 
-    # login_session['voted'] = not login_session['voted']
-    # print(f"loginsessionvoted: {login_session['voted']}")
+def fetchFirstQueue():
+    db_info = db.child("queue").order_by_child("timestamp").limit_to_last(1).get().val()
+    song_formatted = json.loads(json.dumps(db_info))
+    print("first" + str(song_formatted))
+    return song_formatted
 
-
-
+def skipTrack():
+    first = fetchFirstQueue()
+    db.child("current").set(first)
+    db.child("queue").child(next(iter(first))).remove()
+    
 @app.route("/", methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -77,19 +95,23 @@ def home():
         db.child("queue").child(song).set({"timestamp": {".sv": "timestamp"}, "votes": 0})
         return redirect(url_for('home'))
     else:
-        print("yiiis")
         root = db.get().val()
         isFull = json.loads(json.dumps(root))['isFull']
-        spotify_info = sp.track(fetchCurrent())
-        print(spotify_info['name'])
-        print(spotify_info['album']['artists'][0]['name'])
-        return render_template("home.html", song=spotify_info['name'], artists=spotify_info['album']['artists'][0]['name'], name=login_session['name'], voted=login_session['voted'],
-                               isFull = True if isFull == 1 else False )
+        uri=fetchCurrent()
+        spotify_info = sp.track(uri)
+        votes = json.loads((json.dumps(db.child("current").get().val())))[uri]['votes']
+        print(f"Votes: {votes}")
+        print(spotify_info['name'] + ", " + spotify_info['album']['artists'][0]['name'])
+        return render_template("home.html", song=spotify_info, name=login_session['name'], voted=login_session['voted'],
+                               isFull = True if isFull == 1 else False, votes=votes, totalSkips=SONG_SKIP_REQUIREMENT)
 
 @app.route('/vote', methods=['GET', 'POST'])
 def vote():
     if request.method == 'POST':
-       toggleVote()
+       votes = toggleVote()
+       if votes >= SONG_SKIP_REQUIREMENT:
+           print("skipping...")
+           skipTrack()
        return redirect(url_for('home'))
     return redirect(url_for('home'))
 
