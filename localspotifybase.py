@@ -56,7 +56,11 @@ def updateCurrent():
       return
   current_uri = current['item']['uri']
   db_info = json.loads(json.dumps(db.child("current").get().val()))
-  print(f"db_info: {str(db_info)}")
+  prev_info = json.loads(json.dumps(db.child("previous").get().val()))
+  if prev_info != None:
+     prev_uri = next(iter(prev_info))
+  else:
+     prev_uri = ""
   if db_info == None:
      print("None")
      db.child("current").child("spotify:track:1Pai6r7aZUkrP57WoGNVtp").set({"timestamp": {".sv": "timestamp"}, "votes": 0})
@@ -65,12 +69,18 @@ def updateCurrent():
     if db_uri == None or current_uri != db_uri: #if database current is different from spotify current
       print(f"db and current differ. db {db_uri} current {current_uri}")
       first = db.child("queue").order_by_child("timestamp").limit_to_first(1).get().val()
-      #print("first in queue" + dict(first).keys)
-      print("current song " + current_uri)
+      first = json.loads(json.dumps(first))
+      if first != None:
+        first_uri = next(iter(first))
+        print("current song " + current_uri)
+        print("first in queue" + first_uri + " " + sp.track(first_uri)['name'])
       if first==current_uri: #if first in queue is the one that is playing
         print("first in line is playing")
         db.child("current").child(current_uri).set(first)
         db.child("queue").child(current_uri).remove()
+      elif prev_uri == current_uri:
+         print("a song has been voted out. skipping...")
+         sp.next_track()
       else:
         print("other song is playing")
         db.child("current").remove()
@@ -102,8 +112,9 @@ def checkFull():
   queue = sp.queue()
   spotify_uris = []
   for track in queue['queue']:
-    spotify_uris.append(track['uri'])
-  print(len(spotify_uris))
+    spotify_uris.append(sp.track(track['uri'])['name'])
+  print(spotify_uris)
+  # print(f"length of queue: {len(spotify_uris)}")
   return len(spotify_uris) >=20
 
 

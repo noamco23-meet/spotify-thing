@@ -65,7 +65,7 @@ html {
 .content{
     width: 100%;
     position: absolute;
-    top: 30%;
+    top: 20%;
     transform: translateY(-50%);
     text-align: center;
 }
@@ -83,10 +83,10 @@ html {
 
 .center{
     position: absolute;
-    top:75%;
+    top: 60%;
     left: 50%;
     transform: translate(-50%,-50%);
-    width: 400px;
+    width: 800px;
     background-color: white;
     border-radius: 10px ;
 }
@@ -228,6 +228,11 @@ input[type="submit"]:hover{
     transition: .5s;
 }
 
+input[type="submit"]:disabled{
+    background: #666666;
+    pointer-events: none;
+    
+}
 .signup_link{
     margin: 30px 0;
     text-align: center;
@@ -279,4 +284,10 @@ button:hover span{
     width: 100%;
 }
     
+
+.song_info {
+    display: flex;
+    background-color: #ebe6e6;
+    padding: 10px;
+}
 
