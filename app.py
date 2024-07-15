@@ -11,7 +11,7 @@ CLIENT_SECRET ="48962f9a9d254800a949de8d2180734b"
 auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
-SONG_SKIP_REQUIREMENT=2
+SONG_SKIP_REQUIREMENT=1
 
 
 firebaseConfig = {
@@ -84,16 +84,8 @@ def skipTrack():
     else:
         print("No other songs to skip to")
 
-@app.route("/", methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        login_session['name'] = request.form['name']  
-        login_session['voted'] = False
-        return redirect(url_for('home'))
-    else:
-        return render_template("signup.html")
 
-@app.route('/home', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         song = request.form['song']
@@ -133,5 +125,5 @@ def vote():
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
-    app.run(debug=True , host= '0.0.0.0', port= 5000)
+    app.run(debug=True , host= '0.0.0.0', port= 5004)
 
