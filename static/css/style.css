@@ -15,17 +15,37 @@ html {
 .banner{
     width:100%;
     height:100vh;
-    background-color: gainsboro;
+}
+
+.body{
+    background-color: #fff;
+    background-image: linear-gradient(60deg, #ff6596, #60bef8, #d88cff);
+    background-size: 600% 100%;
+    animation: animation 100s infinite linear;
+    animation-fill-mode: forwards;
+}
+
+
+@keyframes animation {
+    0% {
+        background-position: 0 85%;
+    } 50% {
+        background-position: 100% 20% ;
+    } 100% {
+        background-position: 0 85%;
+    }   
+    
 }
 
 .navbar {
-    width: 90%;
+    width: 100%;
     background-color: rgba(0,0,0,.3);
     margin: auto;
-    padding: 35px;
+    padding: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    list-style-type: decimal;
 
 }
 
@@ -43,7 +63,7 @@ html {
 
 .navbar ul li a {
     text-decoration: none;
-    color: #2b2827;
+    color:#e9f4fb;
     margin-right: 4x0px;
 }
 
@@ -87,14 +107,12 @@ html {
     left: 50%;
     transform: translate(-50%,-50%);
     width: 800px;
-    background-color: white;
     border-radius: 10px ;
 }
 
 .center h1{
     text-align: center;
-    padding: 0 0 20px 0;
-    border-bottom: 1px solid silver;
+    padding: 0 0 20px 0;    
 }
 
 .center form{
@@ -106,7 +124,7 @@ html {
 form .txt_field{    
     overflow: visible;
     position: relative;
-    border-bottom: 2px solid #adadad;
+    border-bottom: 2px solid #2b2827    ;
     margin: 30px 0;
 }
 
@@ -123,7 +141,7 @@ form .txt_field{
     position: absolute;
     top: 50%;
     left: 5px;
-    color: #adadad;
+    color: #2b2827;
     transform: translateY(-50%);
     font-size: 16px;
     pointer-events: none;
@@ -137,14 +155,14 @@ form .txt_field{
     left: 0;
     width: 0%;
     height: 2px;
-    background: #2691d9;
+    background: #2b2827;
     transition: .5s;
 }
 
 .txt_field input:focus ~ label,
 .txt_field input:valid ~ label {
     top:-5px;
-    color: #2691d9;
+    color: #2b2827;
 }
 
 .txt_field input:focus ~ span::before,
@@ -195,25 +213,10 @@ form .custom-selector select {
     margin-bottom: 5px;
 }
 
-.forgot_password {
-    margin: 0 0 20px 0;
-    color: #a6a6a6;
-    cursor:pointer;
-}
-
-.forgot_password a{
-    color: #a6a6a6;
-    text-decoration: none;
-}
-
-.forgot_password:hover{
-    text-decoration: underline;
-}
-
 input[type="submit"]{
     width:100%;
     height:50px;
-    border: 1px solid;
+    border: 1px;
     background: #2691d9;
     border-radius: 25px;
     font-size: 18px;
@@ -286,8 +289,11 @@ button:hover span{
     
 
 .song_info {
-    display: flex;
-    background-color: #ebe6e6;
+    display: flex;    
+    background-color: rgba(255,255,255,.1);
     padding: 10px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,.5);
 }
 

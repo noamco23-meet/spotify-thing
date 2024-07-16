@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <title></title>
+</head>
+<body>
+    <div class="banner">
+        <div class="navbar">
+            <ul>
+                <li><a href="/">Queue</a></li>
+                <li><a href="/howto">You Can Do This Too!</a></li>
+            </ul>
+        </div>
+        <div class="content" style="display: flex; justify-content: center; margin-top: 350px; align-items: center;">
+        <ol style="margin-right: 20px; text-align: left; font-size: 20px;">
+            <li>1. Open Spotify on the web or on the desktop app</li>
+            <li>2. Search up a song that you want</li>
+            <li>3. Right click on the song</li>
+            <li>4. Go to 'Share'</li>
+            <li>5. <strong>Hold CTRL</strong> </li>
+            <li>6. Copy Spotify URI <strong>not URL</strong></li>
+            <li>7. Submit your song and wait for the confetti to show.<br>If it didn't submit, the song again</li>
+        </ol>
+        <video width="560" height="420" style="margin-left: 20px;" autoplay loop>
+            <source src="{{ url_for('static', filename='tutorial.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    
+    
+</body>
+</html>

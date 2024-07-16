@@ -11,7 +11,7 @@ CLIENT_SECRET ="48962f9a9d254800a949de8d2180734b"
 auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
-SONG_SKIP_REQUIREMENT=1
+SONG_SKIP_REQUIREMENT=5
 
 
 firebaseConfig = {
@@ -93,20 +93,12 @@ def home():
         db.child("queue").child(song).set({"timestamp": {".sv": "timestamp"}, "votes": 0})
         return redirect(url_for('home'))
     else:
-        print("in get")
-        print(login_session)
         if "voted" not in login_session:
             login_session['voted'] = False
             print("initialised login_session['voted]")
         root = db.get().val()
         isFull = json.loads(json.dumps(root))['isFull']
         uri=fetchCurrent()
-        print(uri)
-        try: 
-            spotify_info = sp.track(uri)
-        except Exception as e:
-            print(e) 
-                
         spotify_info = sp.track(uri)
         votes = json.loads((json.dumps(db.child("current").get().val())))[uri]['votes']
         print(votes)
@@ -123,6 +115,15 @@ def vote():
            login_session['voted'] = False
        return redirect(url_for('home'))
     return redirect(url_for('home'))
+
+@app.route('/tutorial')
+def tutorial():
+    return render_template("tutorial.html")
+
+@app.route('/howto')
+def howto():
+    return render_template("howto.html")
+
 
 if __name__ == '__main__':
     app.run(debug=True , host= '0.0.0.0', port= 5004)
