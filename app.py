@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask import session as login_session
 import pyrebase
 import json
@@ -11,7 +11,7 @@ CLIENT_SECRET ="48962f9a9d254800a949de8d2180734b"
 auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
-SONG_SKIP_REQUIREMENT=5
+SONG_SKIP_REQUIREMENT=1
 
 
 firebaseConfig = {
@@ -40,17 +40,15 @@ def fetchCurrent():
         print("EMPTYYYYYYYYYYYYY")
         uri = {"name": 0, "votes":0}
         return uri
+    
     uri = next(iter(db_info))
     return uri
   
 
 def toggleVote():
     print("toggling vote")
-
     current = json.loads(json.dumps(db.child("current").get().val()))
     current_uri = fetchCurrent()
-    # print(f"uri of current song: {current_uri}")
-    # print(f"content of current: {current[current_uri]}")
     votes = current[current_uri]['votes']
     print(votes)
 
@@ -66,9 +64,10 @@ def toggleVote():
 
 def fetchFirstQueue():
     db_info = db.child("queue").order_by_child("timestamp").limit_to_first(1).get().val()
-    song_formatted = json.loads(json.dumps(db_info))    
+    song_formatted = json.loads(json.dumps(db_info)) 
+    print(f"songformatted {song_formatted}")   
     if song_formatted != None:
-        print(f"firstin line: {sp.track(next(iter(song_formatted)))['name']}")
+        print(f"firstin line: {next(iter(song_formatted))}")
     else:
         song_formatted = None
     return song_formatted
@@ -78,7 +77,7 @@ def skipTrack():
     prev = db.child("current").get().val()
     if first != None:
         db.child("previous").remove()
-        db.child("previous").child(next(iter(json.loads(json.dumps(prev))))).set(prev)
+        db.child("previous").set(prev)
         db.child("current").set(first)
         db.child("queue").child(next(iter(first))).remove()
     else:
@@ -89,9 +88,14 @@ def skipTrack():
 def home():
     if request.method == 'POST':
         song = request.form['song']
-        print(f"New song added to queue: {sp.track(song)['name']}")
-        db.child("queue").child(song).set({"timestamp": {".sv": "timestamp"}, "votes": 0})
-        return redirect(url_for('home'))
+        if song.startswith("spotify:track:") == False:
+            flash("Wrong kind of input! Make sure you submit a spotify URI (it should start with spotify:track:)")
+            return redirect(url_for('home'))
+        else:
+            print(f"New song added to queue: {song}")
+            track = sp.track(song)
+            db.child("queue").child(song).set({"timestamp": {".sv": "timestamp"}, "votes": 0, "url": track['album']['images'][0]['url'], "name": track['name'], "artist": track['album']['artists'][0]['name']})
+            return redirect(url_for('home'))
     else:
         if "voted" not in login_session:
             login_session['voted'] = False
@@ -99,16 +103,15 @@ def home():
         root = db.get().val()
         isFull = json.loads(json.dumps(root))['isFull']
         uri=fetchCurrent()
-        spotify_info = sp.track(uri)
-        votes = json.loads((json.dumps(db.child("current").get().val())))[uri]['votes']
-        print(votes)
-        return render_template("home.html", song=spotify_info, voted=login_session['voted'],
-                               isFull = True if isFull == 1 else False, votes=votes, totalSkips=SONG_SKIP_REQUIREMENT)
+        song = json.loads((json.dumps(db.child("current").get().val())))[uri]
+        return render_template("home.html", song=song, voted=login_session['voted'],
+                               isFull = True if isFull == 1 else False, totalSkips=SONG_SKIP_REQUIREMENT)
 
 @app.route('/vote', methods=['GET', 'POST'])
 def vote():
     if request.method == 'POST':
        votes = toggleVote()
+       print(f" votes: {votes}, song skip requirement {SONG_SKIP_REQUIREMENT}")
        if votes >= SONG_SKIP_REQUIREMENT:
            print("skipping...")
            skipTrack()

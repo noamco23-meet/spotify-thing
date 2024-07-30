@@ -4,6 +4,7 @@ from spotipy.oauth2 import SpotifyOAuth
 import pyrebase
 import time
 import json
+import requests
 
 firebaseConfig = {
   "apiKey": "AIzaSyCRj8D8wEQ7wf4u2QHMxtQ12cJZSBx0yZI",
@@ -17,6 +18,7 @@ firebaseConfig = {
   "databaseURL": "https://spotify-thing-3d02e-default-rtdb.europe-west1.firebasedatabase.app/"
 }
 
+#TODO: implement repetition filter -- check if current song appears elsewhere in the queue, also somehow the votes can be negative. when some other user votes, it resets?
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
@@ -33,7 +35,7 @@ sp = spotipy.Spotify(
         client_id = CLIENT_ID,
         client_secret = CLIENT_SECRET,
         redirect_uri = REDIRECT_URI,
-        scope=scope))
+        scope=scope), requests_timeout=10, retries=10)
 
 def dictsToSets(d):
     return frozenset(d.items())
@@ -57,34 +59,33 @@ def updateCurrent():
   current_uri = current['item']['uri']
   db_info = json.loads(json.dumps(db.child("current").get().val()))
   prev_info = json.loads(json.dumps(db.child("previous").get().val()))
-  if prev_info != None:
-     prev_uri = next(iter(prev_info))
-  else:
-     prev_uri = ""
-  if db_info == None:
+  if db_info == None: #database reset or no current song set
      print("None")
      db.child("current").child("spotify:track:1Pai6r7aZUkrP57WoGNVtp").set({"timestamp": {".sv": "timestamp"}, "votes": 0})
   else:
     db_uri = next(iter(db_info))
     if db_uri == None or current_uri != db_uri: #if database current is different from spotify current
-      print(f"db and current differ. db {db_uri} current {current_uri}")
+      print(f"db and current differ")
       first = db.child("queue").order_by_child("timestamp").limit_to_first(1).get().val()
       first = json.loads(json.dumps(first))
       if first != None:
         first_uri = next(iter(first))
-        print("current song " + current_uri)
-        print("first in queue" + first_uri + " " + sp.track(first_uri)['name'])
-      if first==current_uri: #if first in queue is the one that is playing
-        print("first in line is playing")
-        db.child("current").child(current_uri).set(first)
-        db.child("queue").child(current_uri).remove()
-      elif prev_uri == current_uri:
-         print("a song has been voted out. skipping...")
-         sp.next_track()
+        if first_uri==current_uri: #if first in queue is the one that is playing
+          print("first in line is playing")
+          db.child("current").remove()
+          db.child("current").child(current_uri).set({"timestamp": first[first_uri]["timestamp"], "votes":first[first_uri]["votes"], "url": first[first_uri]['url'], "name": first[first_uri]['name'], "artist": first[first_uri]['artist']})
+          db.child("queue").child(current_uri).remove()
       else:
-        print("other song is playing")
-        db.child("current").remove()
-        db.child("current").child(current_uri).set({"timestamp": {".sv": "timestamp"}, "votes": 0})
+          if prev_info != None:
+            prev_uri = next(iter(prev_info))
+            if prev_uri == current_uri:
+                print("a song has been voted out. skipping...")
+                sp.next_track()
+          else:
+            print("other song is playing.. switching database current")
+            track = sp.track(current_uri)
+            db.child("current").remove()
+            db.child("current").child(current_uri).set({"timestamp": {".sv": "timestamp"}, "votes": 0,  "url": track['album']['images'][0]['url'], "name": track['name'], "artist": track['album']['artists'][0]['name']})
     else: 
       print("same song")
 
@@ -100,27 +101,29 @@ def updateQueue():
     db_uris = []
     for song in db_queue:
       db_uris.append(song)
-    print(f" firebase queue : {db_uris}")
     print(f"spotify queue {len(spotify_uris)}")
     not_in_queue = list(set(db_uris).difference(spotify_uris))
+    current = sp.currently_playing()['item']['uri']
+    if current in not_in_queue:
+       not_in_queue.remove(current)
     print(f"not in queue: {not_in_queue}")
     for track in not_in_queue:
       sp.add_to_queue(track)
 
 def checkFull():
   queue = sp.queue()
-  queue = sp.queue()
   spotify_uris = []
   for track in queue['queue']:
-    spotify_uris.append(sp.track(track['uri'])['name'])
-  print(spotify_uris)
-  # print(f"length of queue: {len(spotify_uris)}")
+    spotify_uris.append(track['uri'])
   return len(spotify_uris) >=20
 
 
 while True:
-  updateCurrent()
-  updateQueue()
+  try:
+    updateCurrent()
+    updateQueue()
+  except requests.exceptions.Timeout:
+    print ("Timeout occurred")
   if checkFull() == True:
      db.update({"isFull": 1})
   else:
